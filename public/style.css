@@ -1,10 +1,8 @@
 body {
-	background-color: #7777ff;
 	font-family: Helvetica, Calibri, sans-serif;
 }
 
 div {
-	background-color: #9d9dFF;
 	width: 70%;
 	margin: auto;
 }
@@ -15,10 +13,20 @@ h2, h1 {
 
 ul {
 	list-style: upper-roman;
-
 }
 
 li {
-	background-color: #5252ff;
 	margin-bottom: 15px;
+	float: left;
+}
+
+a {
+	float: right;
+}
+
+form {
+	clear: both;
+}
+.entry {
+	clear: both;
 }
