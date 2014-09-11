@@ -2,11 +2,6 @@ body {
 	font-family: Helvetica, Calibri, sans-serif;
 }
 
-div {
-	width: 70%;
-	margin: auto;
-}
-
 h2, h1 {
 	text-decoration: underline;
 }
@@ -15,6 +10,7 @@ ul {
 	list-style: upper-roman;
 }
 
+/*
 li {
 	margin-bottom: 15px;
 	float: left;
@@ -27,6 +23,19 @@ a {
 form {
 	clear: both;
 }
+
 .entry {
 	clear: both;
+}
+*/
+
+.row {
+	position: relative;
+	margin-bottom: 15px;
+
+}
+
+a {
+	position: absolute;
+	left: 970px;
 }
