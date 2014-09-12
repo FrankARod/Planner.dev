@@ -24,9 +24,12 @@
 			}
 			return $address_book;
 		}
+
+		public function __construct($file = '') {
+			$this->filename = $file;
+		}
 	}
-	$book = new AddressDataStore;
-	$book->filename = FILENAME;
+	$book = new AddressDataStore(FILENAME);
 	$address_book = $book->read_file();
 	if (!empty($_POST)) {
 		$valid = true;
@@ -49,8 +52,17 @@
 		$address_book = array_values($address_book);
 		$book->save_file($address_book);
 	} 
+	if (count($_FILES) > 0 && $_FILES['file1']['error'] == 0 && $_FILES['file1']['type'] == 'text/plain') {
+		$upload_dir = '/vagrant/sites/planner.dev/public/uploads/';
+		$filename = basename($_FILES['file1']['name']);
+		$saved_filename = $upload_dir . $filename;
+		move_uploaded_file($_FILES['file1']['tmp_name'], $saved_filename);
+		$external = new AddressDataStore($filename);
+		$external_list = $external->read_file();
+		$address_book = array_merge($address_book, $external_list);
+		$book->save_file($address_book);
+	}
 ?>
-
 <html>
 <head>
 	<title>Address Book</title>
@@ -60,9 +72,9 @@
 </head>
 <body>
 	<nav class="navbar navbar-default navbar-fixed-top" role="navigation">
-		<div class="container-fluid" id="nav-form">
-			<p class="navbar-text">Address Book</p>
-			<form method="POST" action="address_book.php" class="navbar-form">		
+		<div class="container-fluid" class="nav-form">
+			<!-- <p class="navbar-text">Address Book</p> -->
+			<form method="POST" action="address_book.php" class="navbar-form navbar-left">		
 				<div class="form-group">
 					<input type="text" name="name" id="name" placeholder="Name">
 				</div>
@@ -82,9 +94,16 @@
 					<input type="submit" class="btn btn-primary" value="Submit">
 				</div>
 			</form>
+			<form method="POST" action="address_book.php" enctype="multipart/form-data" class="navbar-form navbar-right">
+				<div class="form-group">
+					<input type="file" id="file1" name="file1">
+				</div>
+				<div class="form-group">	
+					<input type="submit" value="Upload" class="btn btn-primary">
+				</div>
+			</form>
 		</div><!-- /.container-fluid -->
 	</nav>
-
 	<div class="container">		
 		<table class="table">
 			<tr>
@@ -95,22 +114,19 @@
 				<th>Zip</th>
 				<th>Remove Link</th>
 			</tr>
-
-			<? foreach ($address_book as $entry_index => $entry) : ?>
+				<? foreach ($address_book as $entry_index => $entry) : ?>
 				<tr>
-					<? foreach($entry as $data) : ?>
+						<? foreach($entry as $data) : ?>
 						<td><?= htmlspecialchars(strip_tags($data)); ?></td>
-					<? endforeach ?>
+						<? endforeach ?>
 						<td><a href="?remove=<?=$entry_index;?>" class="btn btn-danger">Remove</a></td>
 				</tr>
-			<? endforeach ?>
+				<? endforeach ?>
 		</table>
-
 		<? if (isset($valid) && !$valid) : ?>
 		<p>Please fill in all fields and try again.</p>
 		<? endif ?>
 	</div>
-	
 	<script type="text/javascript" src="bootstrap/js/bootstrap.min.js"></script>
 </body>
 </html>
