@@ -1,33 +1,8 @@
 <?php
 	define('FILENAME', 'txt/address_book.csv');
-	class AddressDataStore {
-		public $filename = '';
-		public function save_file($address_book) {	
-			$handle = fopen($this->filename, 'w');
-			foreach ($address_book as $key => $value) {
-				fputcsv($handle, $value);
-			}
-			fclose($handle);
-		}
-		public function read_file() {
-			if (filesize($this->filename) == 0) {
-				$address_book = [];
-			} else {
-				$handle = fopen($this->filename, 'r');
-				while(!feof($handle)) {
-					$row = fgetcsv($handle);
-					if (!empty($row)) {
-						$address_book[] = $row;
-					}
-				}
-				fclose($handle);
-			}
-			return $address_book;
-		}
-		public function __construct($file = FILENAME) {
-			$this->filename = $file;
-		}
-	}
+
+	// Grab AddressDataStore class
+	include('classes/address_data_store.php');
 	$book = new AddressDataStore();
 	$address_book = $book->read_file();
 	if (!empty($_POST)) {
@@ -66,7 +41,7 @@
 <head>
 	<title>Address Book</title>
 	<link rel="stylesheet" type="text/css" href="bootstrap/css/bootstrap.min.css">
-	<link rel="stylesheet" type="text/css" href="bootstrap/css/bootstrap-theme.min.css">
+	<!-- <link rel="stylesheet" type="text/css" href="bootstrap/css/bootstrap-theme.min.css"> -->
 	<link rel="stylesheet" type="text/css" href="css/address_book.css">
 </head>
 <body>
@@ -105,6 +80,11 @@
 		</div>
 	</nav>
 	<div class="container">		
+		<? if (isset($valid) && !$valid) : ?>
+		<div class="alert alert-danger">
+			<p>Please fill in all fields and try again.</p>
+		</div>
+		<? endif ?>
 		<table class="table table-striped table-hover">
 			<tr>
 				<th>Name</th>
@@ -114,18 +94,15 @@
 				<th>Zip</th>
 				<th>Remove Link</th>
 			</tr>
-				<? foreach ($address_book as $entry_index => $entry) : ?>
-				<tr>
-						<? foreach($entry as $data) : ?>
-						<td><?= htmlspecialchars(strip_tags($data)); ?></td>
-						<? endforeach ?>
-						<td><a href="?remove=<?=$entry_index;?>" class="btn btn-danger">Remove</a></td>
-				</tr>
-				<? endforeach ?>
+			<? foreach ($address_book as $entry_index => $entry) : ?>
+			<tr>
+					<? foreach($entry as $data) : ?>
+					<td><?= htmlspecialchars(strip_tags($data)); ?></td>
+					<? endforeach ?>
+					<td><a href="?remove=<?=$entry_index;?>" class="btn btn-danger">Remove</a></td>
+			</tr>
+			<? endforeach ?>
 		</table>
-		<? if (isset($valid) && !$valid) : ?>
-		<p>Please fill in all fields and try again.</p>
-		<? endif ?>
 	</div>
 	<script type="text/javascript" src="bootstrap/js/bootstrap.min.js"></script>
 </body>
