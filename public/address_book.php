@@ -24,12 +24,11 @@
 			}
 			return $address_book;
 		}
-
-		public function __construct($file = '') {
+		public function __construct($file = FILENAME) {
 			$this->filename = $file;
 		}
 	}
-	$book = new AddressDataStore(FILENAME);
+	$book = new AddressDataStore();
 	$address_book = $book->read_file();
 	if (!empty($_POST)) {
 		$valid = true;
@@ -73,7 +72,6 @@
 <body>
 	<nav class="navbar navbar-default navbar-fixed-top" role="navigation">
 		<div class="container-fluid" class="nav-form">
-			<!-- <p class="navbar-text">Address Book</p> -->
 			<form method="POST" action="address_book.php" class="navbar-form navbar-left">		
 				<div class="form-group">
 					<input type="text" name="name" id="name" placeholder="Name">
@@ -94,18 +92,20 @@
 					<input type="submit" class="btn btn-primary" value="Submit">
 				</div>
 			</form>
-			<form method="POST" action="address_book.php" enctype="multipart/form-data" class="navbar-form navbar-right">
+			<form method="POST" action="address_book.php" enctype="multipart/form-data" class="navbar-form">
 				<div class="form-group">
-					<input type="file" id="file1" name="file1">
+					<span class="btn btn-default btn-file">
+						Upload Address Book<input type="file" id="file1" name="file1">
+					</span>
 				</div>
 				<div class="form-group">	
 					<input type="submit" value="Upload" class="btn btn-primary">
 				</div>
 			</form>
-		</div><!-- /.container-fluid -->
+		</div>
 	</nav>
 	<div class="container">		
-		<table class="table">
+		<table class="table table-striped table-hover">
 			<tr>
 				<th>Name</th>
 				<th>Address</th>
