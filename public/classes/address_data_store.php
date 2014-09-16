@@ -26,8 +26,4 @@ class AddressDataStore {
 		public function __construct($file = FILENAME) {
 			$this->filename = $file;
 		}
-
-		public function __destruct() {
-			echo "Class dismissed!" . PHP_EOL;
-		}
-	}
+}

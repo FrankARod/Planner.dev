@@ -10,25 +10,6 @@ ul {
 	list-style: upper-roman;
 }
 
-/*
-li {
-	margin-bottom: 15px;
-	float: left;
-}
-
-a {
-	float: right;
-}
-
-form {
-	clear: both;
-}
-
-.entry {
-	clear: both;
-}
-*/
-
 .row {
 	position: relative;
 	margin-bottom: 15px;

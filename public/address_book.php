@@ -2,7 +2,7 @@
 	define('FILENAME', 'txt/address_book.csv');
 
 	// Grab AddressDataStore class
-	include('classes/address_data_store.php');
+	require_once('classes/address_data_store.php');
 	$book = new AddressDataStore();
 	$address_book = $book->read_file();
 	if (!empty($_POST)) {
@@ -82,7 +82,7 @@
 	<div class="container">		
 		<? if (isset($valid) && !$valid) : ?>
 		<div class="alert alert-danger">
-			<p>Please fill in all fields and try again.</p>
+			Please fill in all fields and try again.
 		</div>
 		<? endif ?>
 		<table class="table table-striped table-hover">
