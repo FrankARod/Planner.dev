@@ -3,7 +3,7 @@
 
 	// Grab AddressDataStore class
 	require_once('classes/address_data_store.php');
-	$book = new AddressDataStore();
+	$book = new AddressDataStore(FILENAME);
 	$address_book = $book->read_file();
 	if (!empty($_POST)) {
 		$valid = true;

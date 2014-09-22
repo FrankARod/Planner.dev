@@ -1,40 +1,19 @@
 <?php
 	define('FILENAME', 'txt/todolist.txt');
-
-	$handle = null;
-
-	$list = open_file();
-
-	function open_file($filename = FILENAME) {
-		$handle = fopen($filename, 'r');
-		$list = fread($handle, filesize($filename));
-		fclose($handle);
-		return explode(PHP_EOL, $list);
-	}
-
-	function save_file($data, $filename = FILENAME) {
-		$handle = fopen($filename, 'w');
-		$list = implode(PHP_EOL, $data);
-		fwrite($handle, $list);
-		fclose($handle);
-	}
-
-	function add_file($data) {
-		$handle = fopen(FILENAME, 'a');
-		fwrite($handle, PHP_EOL . implode(PHP_EOL, $data));
-		fclose($handle);
-	}
+	require_once('../inc/filestore.php');
+	$filestore = new Filestore(FILENAME);
+	$list = $filestore->read_lines();
 
 	if (!empty($_POST['newItem'])) {
 		$new_item = $_POST['newItem'];
 		$list[] = $new_item;
-		save_file($list);
+		$filestore->write_lines($list);
 	} 
 
 	if (isset($_GET['remove'])) {
 		$remove_index = $_GET['remove'];
 		unset($list[$remove_index]);
-		save_file($list);
+		$filestore->write_lines($list);
 	}
 
 	if (count($_FILES) > 0 && $_FILES['file1']['error'] == 0 && $_FILES['file1']['type'] == 'text/plain') {
@@ -42,9 +21,10 @@
 		$filename = basename($_FILES['file1']['name']);
 		$saved_filename = $upload_dir . $filename;
 		move_uploaded_file($_FILES['file1']['tmp_name'], $saved_filename);
-		$external_list = open_file($filename);
+		$external_file = new Filestore($filename);
+		$external_list = $external_file->read_lines();
 		$list = array_merge($list, $external_list);
-		add_file($list);
+		$filestore->write_lines($list);
 	} 
 ?>
 
