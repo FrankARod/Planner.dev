@@ -4,9 +4,15 @@ class Filestore {
 
 		public $filename = '';
 
+		public $is_csv = false;
+
 		function __construct($filename = '')
 		{
-				$this->filename = $filename;
+			$this->filename = $filename;
+			if (substr($this->filename, -3, 3) == 'csv') {
+				$this->is_csv = true;
+			}
+			var_dump($this->is_csv);
 		}
 
 		/**
