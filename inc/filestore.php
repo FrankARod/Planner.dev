@@ -18,7 +18,7 @@ class Filestore {
 		/**
 			* Returns array of lines in $this->filename
 		*/
-		function read_lines()
+		private function read_lines()
 		{
 			$handle = fopen($this->filename, 'r');
 			$list = fread($handle, filesize($this->filename));
@@ -29,7 +29,7 @@ class Filestore {
 		/**
 			* Writes each element in $array to a new line in $this->filename
 		*/
-		function write_lines($array)
+		private function write_lines($array)
 		{
 		 	$handle = fopen($this->filename, 'w');
 			$list = implode(PHP_EOL, $array);
@@ -40,7 +40,7 @@ class Filestore {
 		/**
 			* Reads contents of csv $this->filename, returns an array
 			*/
-		function read_csv()
+		private function read_csv()
 		{
 			if (filesize($this->filename) == 0) {
 				$address_book = [];
@@ -60,7 +60,7 @@ class Filestore {
 		/**
 			* Writes contents of $array to csv $this->filename
 			*/
-		function write_csv($array)
+		private function write_csv($array)
 		{
 			$handle = fopen($this->filename, 'w');
 			foreach ($array as $key => $value) {
@@ -69,7 +69,7 @@ class Filestore {
 			fclose($handle);
 		}
 
-		public read() {
+		public function read() {
 			if ($this->is_csv) {
 				return $this->read_csv();
 			}
@@ -78,7 +78,7 @@ class Filestore {
 			}
 		}
 
-		public write($array) {
+		public function write($array) {
 			if ($this->is_csv) {
 				$this->write_csv($array);
 			} else {
