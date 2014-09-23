@@ -69,4 +69,21 @@ class Filestore {
 			fclose($handle);
 		}
 
+		public read() {
+			if ($this->is_csv) {
+				return $this->read_csv();
+			}
+			else {
+				return $this->read_lines();
+			}
+		}
+
+		public write($array) {
+			if ($this->is_csv) {
+				$this->write_csv($array);
+			} else {
+				$this->write_lines($array);
+			}
+		}
+
 }
