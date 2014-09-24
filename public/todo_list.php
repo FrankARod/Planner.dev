@@ -2,18 +2,26 @@
 	define('FILENAME', 'txt/todolist.txt');
 	require_once('../inc/filestore.php');
 	$filestore = new Filestore(FILENAME);
-	$list = $filestore->read_lines();
+	$list = $filestore->read();
 
 	if (!empty($_POST['newItem'])) {
-		$new_item = $_POST['newItem'];
-		$list[] = $new_item;
-		$filestore->write_lines($list);
+		try {
+			if (strlen($_POST['newItem'] > 240)) {
+			throw new Exception('Todo Items must be 240 characters or less');
+			} else {
+				$new_item = $_POST['newItem'];
+				$list[] = $new_item;
+				$filestore->write($list);
+			}
+		} catch (Exception $e) {
+			echo $e->getMessage();
+		}	
 	} 
 
 	if (isset($_GET['remove'])) {
 		$remove_index = $_GET['remove'];
 		unset($list[$remove_index]);
-		$filestore->write_lines($list);
+		$filestore->write($list);
 	}
 
 	if (count($_FILES) > 0 && $_FILES['file1']['error'] == 0 && $_FILES['file1']['type'] == 'text/plain') {
@@ -22,9 +30,9 @@
 		$saved_filename = $upload_dir . $filename;
 		move_uploaded_file($_FILES['file1']['tmp_name'], $saved_filename);
 		$external_file = new Filestore($filename);
-		$external_list = $external_file->read_lines();
+		$external_list = $external_file->read();
 		$list = array_merge($list, $external_list);
-		$filestore->write_lines($list);
+		$filestore->write($list);
 	} 
 ?>
 
@@ -33,46 +41,54 @@
 <html>
 	<head>
 		<title>TODO List</title>
-		<link rel="stylesheet" type="text/css" href="bootstrap/css/boostrap.min.css">
-		<link rel="stylesheet" type="text/css" href="bootstrap/css/bootstrap-theme.css">
+		<link rel="stylesheet" type="text/css" href="bootstrap/css/bootstrap.min.css">
+		<!-- <link rel="stylesheet" type="text/css" href="bootstrap/css/bootstrap-theme.css"> -->
 		<link rel="stylesheet" type="text/css" href="style.css">
 	</head>
 
 	<body>
-		<h2 id="GET">GET</h2>
-			<?php var_dump($_GET); ?>
-		<h2 id="POST">POST</h2>
-			<?php var_dump($_POST); ?>
-		<h2 id="FILES">
-			<?php var_dump($_FILES); ?>
-		</h2>
-
 		<div class="container">
-			<div class="col-md-8">	
-				<h1>TODO List</h1>
-			
-				<ul>
+			<div class="col-md-12">	
+				<h1>Todo List</h1>
+				<ul>	
 					<? 
 						foreach ($list as $index => $item):
 							if (empty($item)) {
 								continue;
 							}
 					?>
-					
-					<div class='row'><li class='entry col-md-4'> <?= htmlspecialchars(strip_tags($item)); ?> </li><a class='col-md-4' href='todo_list.php?remove=<?= $index; ?> '>Mark Complete</a></div> <?= PHP_EOL; ?>
+					<li>
+						<div class="row">
+							<p class="col-md-6"><?= htmlspecialchars(strip_tags($item)); ?></p>
+							<a class='btn btn-danger pull-right' role="button" href='todo_list.php?remove=<?= $index; ?>'>Completed?</a>
+						</div>
+						<hr>
+					</li>
 					<?	endforeach; ?>
-				</ul>	
-				
-				<form method="POST" action="todo_list.php">
-					<label for="newItem">Add a New Item:</label>
-					<input type="text" name="newItem" id="newItem">
-					<input type="submit" value="Add">
-				</form>
-				<form method="POST" enctype="multipart/form-data" action="todo_list.php">
-					<label for="file1">Upload File</label>
-					<input type="file" name="file1" id="file1">
-					<input type="submit" value="Upload">
-				</form>
+					<div class="clearfix"></div>
+				</ul>
+				<div class="pull-left">
+					<form method="POST" action="todo_list.php" role="form" class="form-inline">
+						<div class="form-group">
+							<label for="newItem" class="sr-only">Add a New Item:</label>
+							<input type="text" name="newItem" id="newItem" class="form-control" placeholder="Add Item to List">
+						</div>
+							<input type="submit" value="Add" class="btn btn-default">
+					</form>
+				</div>
+				<div class="pull-left" id="upload-form">	
+					<form method="POST" enctype="multipart/form-data" action="todo_list.php" role="form" class="form-inline">
+						<div class="form-group">
+							<!-- <p class="help-block">Upload external todo list (.txt)</p> -->
+							<label for="file1" class="sr-only">Upload File</label>
+							<span class="btn btn-default btn-file">
+								Upload Todo List<input type="file" id="file1" name="file1">
+							</span>
+							<!-- <input type="file" name="file1" id="file1"> -->
+						</div>
+							<input type="submit" value="Upload" class="btn btn-default">
+					</form>
+				</div>
 			</div>	
 		</div>
 		<script type="text/javascript" src="bootstrap/js/bootstrap.min.js"></script>
