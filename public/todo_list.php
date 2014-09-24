@@ -4,16 +4,18 @@
 	$filestore = new Filestore(FILENAME);
 	$list = $filestore->read();
 
+	class InvalidInputException extends Exception {}
+
 	if (!empty($_POST['newItem'])) {
 		try {
 			if (strlen($_POST['newItem'] > 240)) {
-			throw new Exception('Todo Items must be 240 characters or less');
+			throw new InvalidInputException('Todo Items must be 240 characters or less');
 			} else {
 				$new_item = $_POST['newItem'];
 				$list[] = $new_item;
 				$filestore->write($list);
 			}
-		} catch (Exception $e) {
+		} catch (InvalidInputException $e) {
 			echo $e->getMessage();
 		}	
 	} 

@@ -1,24 +1,28 @@
 <?php
 	define('FILENAME', 'txt/address_book.csv');
 
+	class InvalidInputException extends Exception {}
+
 	// Grab AddressDataStore class
 	require_once('classes/address_data_store.php');
 	$book = new AddressDataStore(FILENAME);
 	$address_book = $book->read_file();
 	if (!empty($_POST)) {
-		$valid = true;
-		foreach ($_POST as $key => $value) {
-			if (empty($value)) {
-				$valid = false;
-				break;
-			} else {
+		try {
+			foreach ($_POST as $key => $value) {
+				if (strlen($value) > 120) {	
+					throw new InvalidInputException('All properties must be 120 characters or less');
+				}
+				if (empty($value)) {
+					throw new InvalidInputException('All fields must be filled');
+				}
 				$entryToAdd[] = $value;
 			}
-		}
-		if ($valid) {
 			$address_book[] = $entryToAdd;
 			$book->save_file($address_book);
-		}
+		} catch (InvalidInputException $e) {
+				echo "<div class='container'><p class='alert alert-danger'>{$e->getMessage()}</p></div>";
+			}	
 	} 
 	if (isset($_GET['remove'])) {
 		$removeKey = $_GET['remove'];
@@ -58,7 +62,60 @@
 					<input type="text" name="city" id="city" placeholder="City">
 				</div>
 				<div class="form-group">
-					<input type="text" name="state" id="state" placeholder="State">
+					<select name="State" name="location" id="location" class="form-control"> 
+						<option value="" selected="selected">Select a State</option> 
+						<option value="AL">Alabama</option> 
+						<option value="AK">Alaska</option> 
+						<option value="AZ">Arizona</option> 
+						<option value="AR">Arkansas</option> 
+						<option value="CA">California</option> 
+						<option value="CO">Colorado</option> 
+						<option value="CT">Connecticut</option> 
+						<option value="DE">Delaware</option> 
+						<option value="DC">District Of Columbia</option> 
+						<option value="FL">Florida</option> 
+						<option value="GA">Georgia</option> 
+						<option value="HI">Hawaii</option> 
+						<option value="ID">Idaho</option> 
+						<option value="IL">Illinois</option> 
+						<option value="IN">Indiana</option> 
+						<option value="IA">Iowa</option> 
+						<option value="KS">Kansas</option> 
+						<option value="KY">Kentucky</option> 
+						<option value="LA">Louisiana</option> 
+						<option value="ME">Maine</option> 
+						<option value="MD">Maryland</option> 
+						<option value="MA">Massachusetts</option> 
+						<option value="MI">Michigan</option> 
+						<option value="MN">Minnesota</option> 
+						<option value="MS">Mississippi</option> 
+						<option value="MO">Missouri</option> 
+						<option value="MT">Montana</option> 
+						<option value="NE">Nebraska</option> 
+						<option value="NV">Nevada</option> 
+						<option value="NH">New Hampshire</option> 
+						<option value="NJ">New Jersey</option> 
+						<option value="NM">New Mexico</option> 
+						<option value="NY">New York</option> 
+						<option value="NC">North Carolina</option> 
+						<option value="ND">North Dakota</option> 
+						<option value="OH">Ohio</option> 
+						<option value="OK">Oklahoma</option> 
+						<option value="OR">Oregon</option> 
+						<option value="PA">Pennsylvania</option> 
+						<option value="RI">Rhode Island</option> 
+						<option value="SC">South Carolina</option> 
+						<option value="SD">South Dakota</option> 
+						<option value="TN">Tennessee</option> 
+						<option value="TX">Texas</option> 
+						<option value="UT">Utah</option> 
+						<option value="VT">Vermont</option> 
+						<option value="VA">Virginia</option> 
+						<option value="WA">Washington</option> 
+						<option value="WV">West Virginia</option> 
+						<option value="WI">Wisconsin</option> 
+						<option value="WY">Wyoming</option>
+					</select>
 				</div>
 				<div class="form-group">
 					<input type="number" name="zip" id="zip" placeholder="Zipcode">
@@ -80,11 +137,6 @@
 		</div>
 	</nav>
 	<div class="container">		
-		<? if (isset($valid) && !$valid) : ?>
-		<div class="alert alert-danger">
-			Please fill in all fields and try again.
-		</div>
-		<? endif ?>
 		<table class="table table-striped table-hover">
 			<tr>
 				<th>Name</th>
