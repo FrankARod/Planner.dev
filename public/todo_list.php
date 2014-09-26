@@ -1,19 +1,37 @@
 <?php
-	define('FILENAME', 'txt/todolist.txt');
-	require_once('../inc/filestore.php');
-	$filestore = new Filestore(FILENAME);
-	$list = $filestore->read();
-
+	require_once('../todo_connect.php');
+	require_once('classes/todo_list.php');
+	require('../inc/filestore.php');
+	$todo_db = new TodoList($dbc);
 	class InvalidInputException extends Exception {}
 
+	// Determines page count for pagination
+	$pages = $todo_db->get_page_count();
+	
+	try {
+		if (isset($_GET['page'])) {
+			$this_page = $_GET['page'];
+			if (isset($_GET['page']) && ($this_page > $pages || !is_numeric($_GET['page'])) || $this_page < 1) {
+				throw new InvalidInputException('Invalid Page Number');
+			}
+		} else {
+			$this_page = 1;
+		}
+	} catch (Exception $e) {
+		echo "<div class='container'><div class='alert alert-danger'>{$e->getMessage()}</div></div>";
+		$this_page = 1;
+	}
+
+	$offset = ($this_page - 1) * 4;
+
+	// User Input
 	if (!empty($_POST['newItem'])) {
 		try {
 			if (strlen($_POST['newItem'] > 240)) {
-			throw new InvalidInputException('Todo Items must be 240 characters or less');
+				throw new InvalidInputException('Todo Items must be 240 characters or less');
 			} else {
 				$new_item = $_POST['newItem'];
-				$list[] = $new_item;
-				$filestore->write($list);
+				$todo_db->insert_db($new_item);
 			}
 		} catch (InvalidInputException $e) {
 			echo $e->getMessage();
@@ -22,8 +40,7 @@
 
 	if (isset($_GET['remove'])) {
 		$remove_index = $_GET['remove'];
-		unset($list[$remove_index]);
-		$filestore->write($list);
+		$todo_db->delete_db($remove_index);
 	}
 
 	if (count($_FILES) > 0 && $_FILES['file1']['error'] == 0 && $_FILES['file1']['type'] == 'text/plain') {
@@ -32,10 +49,14 @@
 		$saved_filename = $upload_dir . $filename;
 		move_uploaded_file($_FILES['file1']['tmp_name'], $saved_filename);
 		$external_file = new Filestore($filename);
-		$external_list = $external_file->read();
-		$list = array_merge($list, $external_list);
-		$filestore->write($list);
+		$external_list = $external_file->read($filename);
+		
+		foreach ($external_list as $key => $item) {
+			$todo_db->insert_db($item);
+		}
 	} 
+	
+	$list = $todo_db->read_db(10, $offset);
 ?>
 
 <!DOCTYPE html>
@@ -53,16 +74,11 @@
 			<div class="col-md-12">	
 				<h1>Todo List</h1>
 				<ul>	
-					<? 
-						foreach ($list as $index => $item):
-							if (empty($item)) {
-								continue;
-							}
-					?>
+					<? foreach ($list as $item): ?>
 					<li>
 						<div class="row">
-							<p class="col-md-6"><?= htmlspecialchars(strip_tags($item)); ?></p>
-							<a class='btn btn-danger pull-right' role="button" href='todo_list.php?remove=<?= $index; ?>'>Completed?</a>
+							<p class="col-md-6"><?= htmlspecialchars(strip_tags($item['todo_item'])); ?></p>
+							<a class='btn btn-danger pull-right' role="button" href='todo_list.php?remove=<?= $item['id']; ?>'>Completed?</a>
 						</div>
 						<hr>
 					</li>
@@ -73,7 +89,7 @@
 					<form method="POST" action="todo_list.php" role="form" class="form-inline">
 						<div class="form-group">
 							<label for="newItem" class="sr-only">Add a New Item:</label>
-							<input type="text" name="newItem" id="newItem" class="form-control" placeholder="Add Item to List">
+							<input type="text" name="newItem" id="newItem" class="form-control" placeholder="Add Item to List" autofocus>
 						</div>
 							<input type="submit" value="Add" class="btn btn-default">
 					</form>
@@ -91,7 +107,12 @@
 							<input type="submit" value="Upload" class="btn btn-default">
 					</form>
 				</div>
-			</div>	
+			</div>
+			<ul class="pagination">
+				<? for ($i = 1; $i <= $pages; $i++): ?>
+					<li><a href="?page=<?= $i; ?>"><?= $i; ?></a></li>
+				<? endfor; ?>
+			</ul>
 		</div>
 		<script type="text/javascript" src="bootstrap/js/bootstrap.min.js"></script>
 	</body>

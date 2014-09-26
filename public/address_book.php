@@ -1,54 +1,43 @@
 <?php
-	define('FILENAME', 'txt/address_book.csv');
-
+	require('../address_connect.php');
+	require('classes/AddressBook.php');
 	class InvalidInputException extends Exception {}
+	$book = new AddressBook($dbc);
 
-	// Grab AddressDataStore class
-	require_once('classes/address_data_store.php');
-	$book = new AddressDataStore(FILENAME);
-	$address_book = $book->read_file();
-	if (!empty($_POST)) {
-		try {
-			foreach ($_POST as $key => $value) {
-				if (strlen($value) > 120) {	
-					throw new InvalidInputException('All properties must be 120 characters or less');
-				}
-				if (empty($value)) {
-					throw new InvalidInputException('All fields must be filled');
-				}
-				$entryToAdd[] = $value;
-			}
-			$address_book[] = $entryToAdd;
-			$book->save_file($address_book);
-		} catch (InvalidInputException $e) {
-				echo "<div class='container'><p class='alert alert-danger'>{$e->getMessage()}</p></div>";
-			}	
+	
+	if (!empty($_POST['name']) && is_numeric(($_POST['existing_address']))) {
+		$book->add_to_address($_POST['existing_address'], $book->check_name($_POST['name']));
+	} elseif (!empty($_POST['name']) && !empty($_POST['new_address'])) {
+		$book->add_to_address($book->check_address($_POST['new_address']), $book->check_name($_POST['name']));
 	} 
+
 	if (isset($_GET['remove'])) {
 		$removeKey = $_GET['remove'];
 		unset($address_book[$removeKey]);
 		$address_book = array_values($address_book);
 		$book->save_file($address_book);
 	} 
-	if (count($_FILES) > 0 && $_FILES['file1']['error'] == 0 && $_FILES['file1']['type'] == 'text/plain') {
-		$upload_dir = '/vagrant/sites/planner.dev/public/uploads/';
-		$filename = basename($_FILES['file1']['name']);
-		$saved_filename = $upload_dir . $filename;
-		move_uploaded_file($_FILES['file1']['tmp_name'], $saved_filename);
-		$external = new AddressDataStore($filename);
-		$external_list = $external->read_file();
-		$address_book = array_merge($address_book, $external_list);
-		$book->save_file($address_book);
+
+	if (isset($_GET['address'])) {
+		$names = $book->show_address($_GET['address']);
+		$viewing = htmlspecialchars($names[0]['address']);
+	} elseif (isset($_GET['name'])) {
+		$names = $book->show_name($_GET['name']);
+		$viewing = htmlspecialchars($names[0]['name']);
+	} else {
+		$names = $book->list_names();
+		$viewing = "All Names";
 	}
+
+	$addresses = $book->list_addresses();
 ?>
 <html>
 <head>
 	<title>Address Book</title>
 	<link rel="stylesheet" type="text/css" href="bootstrap/css/bootstrap.min.css">
-	<!-- <link rel="stylesheet" type="text/css" href="bootstrap/css/bootstrap-theme.min.css"> -->
 	<link rel="stylesheet" type="text/css" href="css/address_book.css">
 </head>
-<body>
+<body style="margin-top: 70px">
 	<nav class="navbar navbar-default navbar-fixed-top" role="navigation">
 		<div class="container-fluid" class="nav-form">
 			<form method="POST" action="address_book.php" class="navbar-form navbar-left">		
@@ -56,13 +45,21 @@
 					<input type="text" name="name" id="name" placeholder="Name">
 				</div>
 				<div class="form-group">
-					<input type="text" name="address" id="address" placeholder="Address">
+					<select id="existing_address" name="existing address" class="form-control">
+						<option>Add a New Address</option>
+						<? foreach($addresses as $address): ?>
+							<option value="<?= $address['id'] ?>"><?= "{$address['address']}, {$address['zip']}, {$address['city']}, {$address['state']}"; ?></option>
+						<? endforeach; ?>
+					</select>
 				</div>
 				<div class="form-group">
-					<input type="text" name="city" id="city" placeholder="City">
+					<input type="text" name="new_address[address]" id="new_address[address]" placeholder="Address">
 				</div>
 				<div class="form-group">
-					<select name="State" name="location" id="location" class="form-control"> 
+					<input type="text" name="new_address[city]" id="new_address[city]" placeholder="City">
+				</div>
+				<div class="form-group">
+					<select name="new_address[location]" id="new_address[location]" class="form-control"> 
 						<option value="" selected="selected">Select a State</option> 
 						<option value="AL">Alabama</option> 
 						<option value="AK">Alaska</option> 
@@ -118,42 +115,30 @@
 					</select>
 				</div>
 				<div class="form-group">
-					<input type="number" name="zip" id="zip" placeholder="Zipcode">
+					<input type="number" name="new_address[zip]" id="new_address[zip]" placeholder="Zipcode">
 				</div>
 				<div class="form-group">
 					<input type="submit" class="btn btn-primary" value="Submit">
 				</div>
 			</form>
-			<form method="POST" action="address_book.php" enctype="multipart/form-data" class="navbar-form">
-				<div class="form-group">
-					<span class="btn btn-default btn-file">
-						Upload Address Book<input type="file" id="file1" name="file1">
-					</span>
-				</div>
-				<div class="form-group">	
-					<input type="submit" value="Upload" class="btn btn-primary">
-				</div>
-			</form>
 		</div>
 	</nav>
 	<div class="container">		
+		<a href="address_book.php" class="btn btn-primary">Home</a>
+		<h1>Viewing <?= $viewing; ?></h1>
 		<table class="table table-striped table-hover">
 			<tr>
 				<th>Name</th>
 				<th>Address</th>
-				<th>City</th>
-				<th>State</th>
-				<th>Zip</th>
 				<th>Remove Link</th>
 			</tr>
-			<? foreach ($address_book as $entry_index => $entry) : ?>
-			<tr>
-					<? foreach($entry as $data) : ?>
-					<td><?= htmlspecialchars(strip_tags($data)); ?></td>
-					<? endforeach ?>
-					<td><a href="?remove=<?=$entry_index;?>" class="btn btn-danger">Remove</a></td>
-			</tr>
-			<? endforeach ?>
+				<? foreach ($names as $name) : ?>
+					<tr>
+						<td><a href="?name=<?= $name['name_id']; ?>"><?= htmlspecialchars($name['name']); ?></a></td>
+						<td><a href="?address=<?= $name['address_id']; ?>"><?= htmlspecialchars($name['address']); ?></a></td>
+						<td><a href="?remove=<?=$name['name_id'];?>" class="btn btn-danger">Remove</a></td>
+					</tr>
+				<? endforeach ?>
 		</table>
 	</div>
 	<script type="text/javascript" src="bootstrap/js/bootstrap.min.js"></script>
